@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useAuth } from "../context/AuthContext";
+import { getDashboardPath, useAuth } from "../context/AuthContext";
 import { useBookings } from "../context/BookingContext";
-import { fetchProviderById } from "../services/mockApi";
+import { useServiceCatalog } from "../context/ServiceCatalogContext";
 
 const emptyForm = {
   name: "",
@@ -20,17 +19,15 @@ export default function BookServicePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createBooking } = useBookings();
+  const { resolveProviderByListingId } = useServiceCatalog();
 
-  const [provider, setProvider] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const provider = useMemo(
+    () => resolveProviderByListingId(decodeURIComponent(providerId ?? "")),
+    [providerId, resolveProviderByListingId]
+  );
+
   const [form, setForm] = useState(emptyForm);
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    fetchProviderById(providerId)
-      .then((res) => setProvider(res.data))
-      .finally(() => setLoading(false));
-  }, [providerId]);
 
   useEffect(() => {
     if (!user) return;
@@ -57,7 +54,6 @@ export default function BookServicePage() {
     );
   }
 
-  if (loading) return <LoadingSpinner />;
   if (!provider) return <section className="container py-5">Provider not found.</section>;
 
   const onChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -67,7 +63,7 @@ export default function BookServicePage() {
     setSubmitted(true);
     if (!canBook) return;
     createBooking({ provider, form, consumer: user });
-    navigate("/dashboard");
+    navigate(getDashboardPath(user.role));
   };
 
   return (
@@ -141,4 +137,3 @@ export default function BookServicePage() {
     </section>
   );
 }
-

@@ -239,9 +239,25 @@ export const providers = [
 ];
 
 export const initialUsers = [
-  { id: "u1", name: "Neha Consumer", email: "consumer@demo.com", password: "123456", role: "consumer" },
-  { id: "u2", name: "Arjun Provider", email: "provider@demo.com", password: "123456", role: "provider" },
-  { id: "u3", name: "Admin User", email: "admin@demo.com", password: "123456", role: "admin" },
+  {
+    id: "u1",
+    name: "Neha Consumer",
+    email: "consumer@demo.com",
+    password: "123456",
+    role: "consumer",
+    approvalStatus: "approved",
+    accountStatus: "active",
+  },
+  {
+    id: "u2",
+    name: "Arjun Provider",
+    email: "provider@demo.com",
+    password: "123456",
+    role: "provider",
+    approvalStatus: "approved",
+    accountStatus: "active",
+    location: "Patia",
+  },
 ];
 
 export const bookings = [

@@ -1,25 +1,33 @@
-import { useEffect, useState } from "react";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useMemo, useState } from "react";
 import ServiceCard from "../components/common/ServiceCard";
-import { fetchServices } from "../services/mockApi";
+import { useServiceCatalog } from "../context/ServiceCatalogContext";
 
 export default function ServicesPage() {
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { mergedBrowseServices } = useServiceCatalog();
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchServices()
-      .then((res) => setServices(res.data || []))
-      .finally(() => setLoading(false));
-  }, []);
+  const services = useMemo(
+    () => mergedBrowseServices.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())),
+    [mergedBrowseServices, search]
+  );
 
   return (
     <section className="container py-5">
       <div className="text-center mb-4">
         <h2 className="fw-bold">Our Services</h2>
-        <p className="text-muted mb-0">Explore verified categories and find providers near you.</p>
+        <p className="text-muted mb-0">Explore verified categories and provider-added services.</p>
       </div>
-      {loading ? <LoadingSpinner /> : <div className="row g-4">{services.map((item) => <ServiceCard key={item.id} service={item} />)}</div>}
+      <div className="row justify-content-center mb-4">
+        <div className="col-md-6">
+          <input
+            className="form-control"
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="row g-4">{services.map((item) => <ServiceCard key={item.id} service={item} />)}</div>
     </section>
   );
 }

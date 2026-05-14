@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { getDashboardPath, useAuth } from "../context/AuthContext";
+import { validateRegistrationForm } from "../utils/validation";
 
 export default function RegisterPage({ forceProvider = false }) {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { user, register } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -17,10 +18,19 @@ export default function RegisterPage({ forceProvider = false }) {
 
   const onSubmit = (event) => {
     event.preventDefault();
-    const result = register(form);
+    const v = validateRegistrationForm(form);
+    if (!v.ok) return setError(v.message);
+    const result = register({ ...form, name: v.name, email: v.email, password: v.password });
     if (!result.success) return setError(result.message);
     navigate("/login");
   };
+
+  if (user) {
+    const allowBecomeProviderWhileConsumer = forceProvider && user.role === "consumer";
+    if (!allowBecomeProviderWhileConsumer) {
+      return <Navigate to={getDashboardPath(user.role)} replace />;
+    }
+  }
 
   return (
     <section className="container py-5">
@@ -54,7 +64,6 @@ export default function RegisterPage({ forceProvider = false }) {
                   >
                     <option value="consumer">Service Consumer</option>
                     <option value="provider">Service Provider</option>
-                    <option value="admin">Admin</option>
                   </select>
                 </div>
                 <button className="btn btn-primary w-100" type="submit">

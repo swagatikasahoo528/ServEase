@@ -1,6 +1,28 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const BookingContext = createContext(null);
+
+const STORAGE_BOOKINGS = "servease_bookings";
+const STORAGE_REQUESTS = "servease_requests";
+const STORAGE_PROVIDER_NOTIFICATIONS = "servease_provider_notifications";
+
+function readJsonArray(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function readProviderNotifications() {
+  return readJsonArray(STORAGE_PROVIDER_NOTIFICATIONS).map((n) => ({
+    ...n,
+    read: n.read === true,
+  }));
+}
 
 const nowDateLabel = () => {
   const d = new Date();
@@ -8,17 +30,33 @@ const nowDateLabel = () => {
 };
 
 export function BookingProvider({ children }) {
-  const [bookings, setBookings] = useState([]);
-  const [requests, setRequests] = useState([]);
+  const [bookings, setBookings] = useState(() => readJsonArray(STORAGE_BOOKINGS));
+  const [requests, setRequests] = useState(() => readJsonArray(STORAGE_REQUESTS));
+  const [providerNotifications, setProviderNotifications] = useState(readProviderNotifications);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_BOOKINGS, JSON.stringify(bookings));
+  }, [bookings]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_REQUESTS, JSON.stringify(requests));
+  }, [requests]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_PROVIDER_NOTIFICATIONS, JSON.stringify(providerNotifications));
+  }, [providerNotifications]);
 
   const createBooking = ({ provider, form, consumer }) => {
     const bookingId = `b_${Date.now()}`;
+    const providerAccountId = provider.userId ?? null;
+
     const booking = {
       id: bookingId,
       date: nowDateLabel(),
       service: provider.serviceType,
       provider: provider.name,
       providerId: provider.id,
+      providerAccountId,
       status: "Pending",
       consumerEmail: consumer?.email ?? form.email,
       consumerName: form.name,
@@ -35,6 +73,7 @@ export function BookingProvider({ children }) {
       id: `r_${Date.now()}`,
       bookingId,
       providerId: provider.id,
+      providerAccountId,
       providerName: provider.name,
       service: provider.serviceType,
       customerName: form.name,
@@ -50,6 +89,19 @@ export function BookingProvider({ children }) {
 
     setBookings((prev) => [booking, ...prev]);
     setRequests((prev) => [request, ...prev]);
+
+    if (providerAccountId) {
+      const note = {
+        id: `n_${Date.now()}`,
+        providerAccountId,
+        bookingId,
+        message: "New booking received",
+        read: false,
+        createdAt: Date.now(),
+      };
+      setProviderNotifications((prev) => [note, ...prev]);
+    }
+
     return booking;
   };
 
@@ -68,9 +120,24 @@ export function BookingProvider({ children }) {
     setRequests((prev) => prev.map((r) => (r.bookingId === bookingId ? { ...r, status: "Rejected" } : r)));
   };
 
+  const markNotificationsReadForProvider = (providerAccountId) => {
+    setProviderNotifications((prev) =>
+      prev.map((n) => (n.providerAccountId === providerAccountId ? { ...n, read: true } : n))
+    );
+  };
+
   const value = useMemo(
-    () => ({ bookings, requests, createBooking, cancelBooking, acceptRequest, rejectRequest }),
-    [bookings, requests]
+    () => ({
+      bookings,
+      requests,
+      providerNotifications,
+      createBooking,
+      cancelBooking,
+      acceptRequest,
+      rejectRequest,
+      markNotificationsReadForProvider,
+    }),
+    [bookings, requests, providerNotifications]
   );
 
   return <BookingContext.Provider value={value}>{children}</BookingContext.Provider>;
@@ -79,4 +146,3 @@ export function BookingProvider({ children }) {
 export function useBookings() {
   return useContext(BookingContext);
 }
-

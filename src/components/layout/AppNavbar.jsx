@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext";
+import { getDashboardPath, useAuth } from "../../context/AuthContext";
 
 export default function AppNavbar() {
   const { user, logout } = useAuth();
@@ -8,13 +8,15 @@ export default function AppNavbar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/login", { replace: true });
   };
 
+  const showConsumerExplore = !user || user.role === "consumer";
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <nav className="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
       <div className="container">
-        <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
+        <Link className="navbar-brand d-flex align-items-center gap-2" to={showConsumerExplore ? "/" : getDashboardPath(user.role)}>
           <span className="brand-logo-shell">
             <span className="brand-logo">
               <span className="brand-logo-text">SE</span>
@@ -38,16 +40,20 @@ export default function AppNavbar() {
         </button>
         <div className="collapse navbar-collapse" id="mainNav">
           <ul className="navbar-nav me-auto ms-lg-4">
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/">
-                Home
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/services">
-                Services
-              </NavLink>
-            </li>
+            {showConsumerExplore && (
+              <>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/">
+                    Home
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/services">
+                    Services
+                  </NavLink>
+                </li>
+              </>
+            )}
             <li className="nav-item">
               <NavLink className="nav-link" to="/about">
                 About Us
@@ -55,7 +61,7 @@ export default function AppNavbar() {
             </li>
           </ul>
 
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 flex-wrap justify-content-lg-end">
             {!user ? (
               <>
                 <Link to="/login" className="btn btn-outline-primary btn-sm">
@@ -67,6 +73,12 @@ export default function AppNavbar() {
               </>
             ) : (
               <>
+                {user.role === "admin" && (
+                  <span className="badge rounded-pill text-bg-dark small">Admin Panel</span>
+                )}
+                <Link to={getDashboardPath(user.role)} className="btn btn-primary btn-sm">
+                  Dashboard
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="btn btn-outline-secondary btn-sm"

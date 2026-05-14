@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaCheckCircle, FaLock, FaRocket, FaStar } from "react-icons/fa";
 import ServiceCard from "../components/common/ServiceCard";
-import LoadingSpinner from "../components/common/LoadingSpinner";
-import { fetchServices } from "../services/mockApi";
+import { useServiceCatalog } from "../context/ServiceCatalogContext";
 
 const features = [
   { icon: <FaCheckCircle />, title: "Verified Providers", desc: "Background-checked professionals." },
@@ -28,16 +27,11 @@ const heroImages = [
 ];
 
 export default function HomePage() {
-  const [serviceData, setServiceData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { mergedBrowseServices } = useServiceCatalog();
   const [search, setSearch] = useState("");
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
-  useEffect(() => {
-    fetchServices()
-      .then((res) => setServiceData(res.data))
-      .finally(() => setLoading(false));
-  }, []);
+  const serviceData = mergedBrowseServices;
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -46,33 +40,67 @@ export default function HomePage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const filteredServices = serviceData.filter((service) =>
-    service.name.toLowerCase().includes(search.toLowerCase())
+  const filteredServices = useMemo(
+    () => serviceData.filter((service) => service.name.toLowerCase().includes(search.toLowerCase())),
+    [serviceData, search]
   );
 
   return (
     <>
-      <section className="hero-section text-white py-5">
+      <section className="hero-section text-white py-5 overflow-hidden">
+        <div className="hero-shape hero-shape-1"></div>
+        <div className="hero-shape hero-shape-2"></div>
         <div className="container">
-          <div className="row align-items-center g-4">
+          <div className="row align-items-center g-5">
             <div className="col-lg-6">
-              <h1 className="display-5 fw-bold">Find Trusted Service Providers Near You</h1>
-              <p className="lead opacity-75 mt-3">
-                Discover skilled professionals for household and personal services with transparent ratings and pricing.
+              <span className="eyebrow text-uppercase">Premium service discovery</span>
+              <h1 className="display-4 fw-bold mt-3">
+                Book trusted experts from an elegant dark experience.
+              </h1>
+              <p className="lead opacity-75 mt-4">
+                Discover verified providers, compare ratings, and book confidently with a sleek interface inspired by modern award-winning design.
               </p>
-              <div className="d-flex gap-2 mt-4 flex-wrap">
-                <Link to="/register" className="btn btn-light btn-lg">
+              <div className="d-flex gap-3 mt-4 flex-wrap">
+                <Link to="/register" className="btn btn-primary btn-lg">
                   Get Started
                 </Link>
+                <Link to="/services" className="btn btn-outline-light btn-lg">
+                  Explore services
+                </Link>
+              </div>
+              <div className="hero-stats d-flex flex-wrap gap-3 mt-5">
+                <div className="stat-card">
+                  <strong>12K+</strong>
+                  <span>Verified Providers</span>
+                </div>
+                <div className="stat-card">
+                  <strong>4.9/5</strong>
+                  <span>Average Rating</span>
+                </div>
+                <div className="stat-card">
+                  <strong>99%</strong>
+                  <span>Client Satisfaction</span>
+                </div>
               </div>
             </div>
-            <div className="col-lg-6 text-center">
-              <img
-                src={heroImages[activeHeroIndex].src}
-                className="img-fluid rounded-4 shadow-lg hero-toggle-image"
-                alt={heroImages[activeHeroIndex].alt}
-              />
-              <div className="d-flex justify-content-center gap-2 mt-3">
+            <div className="col-lg-6">
+              <div className="hero-image-panel rounded-4 overflow-hidden shadow-lg">
+                <img
+                  src={heroImages[activeHeroIndex].src}
+                  className="img-fluid hero-toggle-image"
+                  alt={heroImages[activeHeroIndex].alt}
+                />
+                <div className="hero-image-overlay p-4">
+                  <p className="small text-muted mb-2">Featured provider</p>
+                  <h5 className="mb-1">Pro Home Care</h5>
+                  <p className="small opacity-75 mb-3">Top-rated cleaning and repair service with fast response.</p>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="badge badge-pill bg-success text-white">Live now</span>
+                    <span className="small text-muted">Best choice</span>
+                  </div>
+                </div>
+              </div>
+              <div className="d-flex justify-content-center gap-2 mt-4">
                 {heroImages.map((image, index) => (
                   <button
                     key={image.src}
@@ -103,17 +131,17 @@ export default function HomePage() {
             />
           </div>
         </div>
-        {loading ? <LoadingSpinner /> : <div className="row g-4">{filteredServices.map((s) => <ServiceCard key={s.id} service={s} />)}</div>}
+        <div className="row g-4">{filteredServices.map((s) => <ServiceCard key={s.id} service={s} />)}</div>
       </section>
 
-      <section className="bg-white py-5">
+      <section className="section-surface py-5">
         <div className="container">
           <h2 className="fw-bold text-center mb-4">Why Choose ServEase?</h2>
           <div className="row g-4">
             {features.map((feature) => (
               <div className="col-md-6 col-lg-3" key={feature.title}>
-                <div className="p-4 bg-light rounded-4 h-100 text-center feature-card">
-                  <div className="fs-3 text-primary mb-2">{feature.icon}</div>
+                <div className="p-4 rounded-4 h-100 text-center feature-card">
+                  <div className="fs-3 text-cyan mb-3">{feature.icon}</div>
                   <h6>{feature.title}</h6>
                   <p className="small text-muted mb-0">{feature.desc}</p>
                 </div>
@@ -123,7 +151,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-5">
+      <section className="cta-section py-5">
         <div className="container">
           <div className="cta-box p-4 p-md-5 rounded-4 text-center">
             <h3 className="fw-bold">Ready to book your next service?</h3>

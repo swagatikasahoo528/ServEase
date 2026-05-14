@@ -11,7 +11,7 @@ export default function ProviderCard({ provider }) {
           <p className="mb-1 small"><strong>Location:</strong> {provider.location}</p>
           <p className="mb-2 small"><strong>Starting Price:</strong> {provider.price}</p>
           <StarRating rating={provider.rating} />
-          <Link to={`/provider/${provider.id}`} className="btn btn-primary mt-3 w-100">
+          <Link to={`/provider/${encodeURIComponent(provider.id)}`} className="btn btn-primary mt-3 w-100">
             View Details
           </Link>
         </div>

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { getDashboardPath, useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "", role: "consumer" });
+  const { user, login } = useAuth();
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
   const onChange = (event) => setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
@@ -14,8 +14,10 @@ export default function LoginPage() {
     event.preventDefault();
     const result = login(form);
     if (!result.success) return setError(result.message);
-    navigate("/dashboard");
+    navigate(getDashboardPath(result.role), { replace: true });
   };
+
+  if (user) return <Navigate to={getDashboardPath(user.role)} replace />;
 
   return (
     <section className="container py-5">
@@ -26,14 +28,6 @@ export default function LoginPage() {
               <h3 className="fw-bold mb-3">Login</h3>
               {error && <div className="alert alert-danger py-2">{error}</div>}
               <form onSubmit={onSubmit}>
-                <div className="mb-3">
-                  <label className="form-label">Login As</label>
-                  <select className="form-select" name="role" value={form.role} onChange={onChange}>
-                    <option value="consumer">Service Consumer</option>
-                    <option value="provider">Service Provider</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
                 <div className="mb-3">
                   <label className="form-label">Email</label>
                   <input className="form-control" name="email" type="email" required onChange={onChange} />

@@ -11,12 +11,10 @@ export default function AppNavbar() {
     navigate("/login", { replace: true });
   };
 
-  const showConsumerExplore = !user || user.role === "consumer";
-
   return (
     <nav className="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
       <div className="container">
-        <Link className="navbar-brand d-flex align-items-center gap-2" to={showConsumerExplore ? "/" : getDashboardPath(user.role)}>
+        <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
           <span className="brand-logo-shell">
             <span className="brand-logo">
               <span className="brand-logo-text">SE</span>
@@ -40,20 +38,16 @@ export default function AppNavbar() {
         </button>
         <div className="collapse navbar-collapse" id="mainNav">
           <ul className="navbar-nav me-auto ms-lg-4">
-            {showConsumerExplore && (
-              <>
-                <li className="nav-item">
-                  <NavLink className="nav-link" to="/">
-                    Home
-                  </NavLink>
-                </li>
-                <li className="nav-item">
-                  <NavLink className="nav-link" to="/services">
-                    Services
-                  </NavLink>
-                </li>
-              </>
-            )}
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/">
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/services">
+                Services
+              </NavLink>
+            </li>
             <li className="nav-item">
               <NavLink className="nav-link" to="/about">
                 About Us

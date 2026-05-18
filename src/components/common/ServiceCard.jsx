@@ -1,6 +1,14 @@
 import { Link } from "react-router-dom";
+import { useServiceCatalog } from "../../context/ServiceCatalogContext";
 
 export default function ServiceCard({ service }) {
+  const { getProvidersForService } = useServiceCatalog();
+  const providers = getProvidersForService
+    ? getProvidersForService(service.id)
+    : [];
+  const firstProvider =
+    (providers || []).find((p) => p.userId) || (providers || [])[0] || null;
+
   return (
     <div className="col-sm-6 col-lg-4">
       <div className="card h-100 border-0 shadow-sm service-card">
@@ -14,8 +22,16 @@ export default function ServiceCard({ service }) {
         />
         <div className="card-body d-flex flex-column">
           <h5 className="card-title">{service.name}</h5>
+          {firstProvider && (
+            <p className="mb-1 small text-muted">
+              Provided by {firstProvider.name}
+            </p>
+          )}
           <p className="text-muted small flex-grow-1">{service.description}</p>
-          <Link to={`/providers/${encodeURIComponent(service.id)}`} className="btn btn-outline-primary w-100">
+          <Link
+            to={`/providers/${encodeURIComponent(service.id)}`}
+            className="btn btn-outline-primary w-100"
+          >
             View Providers
           </Link>
         </div>

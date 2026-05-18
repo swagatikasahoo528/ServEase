@@ -33,6 +33,13 @@ export const services = [
     image:
       "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=80",
   },
+  {
+    id: "house-painting",
+    name: "House Painting",
+    description: "Interior and exterior painting, surface preparation, and finishing.",
+    image:
+      "https://images.unsplash.com/photo-1623413243687-6dfb79d7c3d6?auto=format&fit=crop&w=900&q=80",
+  },
 ];
 
 export const providers = [

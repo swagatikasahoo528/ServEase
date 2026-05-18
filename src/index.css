@@ -30,6 +30,11 @@ body::selection {
   color: #ffffff;
 }
 
+*::selection {
+  background: rgba(56, 189, 248, 0.3);
+  color: #ffffff;
+}
+
 .container {
   max-width: 1140px;
 }
@@ -60,9 +65,27 @@ body::selection {
 }
 
 .form-control {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e5e7eb;
+}
+
+/* Make input placeholders readable on dark backgrounds */
+.form-control::placeholder,
+.form-control::-webkit-input-placeholder,
+.form-control:-ms-input-placeholder,
+.form-control::-ms-input-placeholder {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* Ensure search box placeholder text is white (higher specificity) */
+.input-group .form-control::placeholder,
+.input-group .form-control::-webkit-input-placeholder,
+.input-group .form-control:-ms-input-placeholder,
+.input-group .form-control::-ms-input-placeholder {
+  color: #ffffff !important;
+  opacity: 1 !important;
 }
 
 .form-control:focus {
@@ -110,4 +133,11 @@ body::selection {
 
 hr {
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Prevent white background on text selection in service items */
+.d-flex.border.rounded p::selection,
+.d-flex.border.rounded small::selection {
+  background: rgba(56, 189, 248, 0.3) !important;
+  color: #ffffff !important;
 }

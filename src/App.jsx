@@ -50,14 +50,6 @@ function RequireRole({ role, children }) {
   return children;
 }
 
-/** Logged-in providers and admins are sent to their dashboard (consumer marketplace). */
-function ConsumerMarketplace({ children }) {
-  const { user } = useAuth();
-  if (user?.role === "provider") return <Navigate to="/provider-dashboard" replace />;
-  if (user?.role === "admin") return <Navigate to="/admin-dashboard" replace />;
-  return children;
-}
-
 function DashboardRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -77,47 +69,12 @@ function AppShell() {
       <AppNavbar />
       <main className="main-content">
         <Routes>
-          <Route
-            path="/"
-            element={
-              <ConsumerMarketplace>
-                <HomePage />
-              </ConsumerMarketplace>
-            }
-          />
-          <Route
-            path="/services"
-            element={
-              <ConsumerMarketplace>
-                <ServicesPage />
-              </ConsumerMarketplace>
-            }
-          />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/services" element={<ServicesPage />} />
           <Route path="/about" element={<AboutUsPage />} />
-          <Route
-            path="/providers/:serviceId"
-            element={
-              <ConsumerMarketplace>
-                <ProviderListingPage />
-              </ConsumerMarketplace>
-            }
-          />
-          <Route
-            path="/provider/:providerId"
-            element={
-              <ConsumerMarketplace>
-                <ProviderDetailsPage />
-              </ConsumerMarketplace>
-            }
-          />
-          <Route
-            path="/book/:providerId"
-            element={
-              <ConsumerMarketplace>
-                <BookServicePage />
-              </ConsumerMarketplace>
-            }
-          />
+          <Route path="/providers/:serviceId" element={<ProviderListingPage />} />
+          <Route path="/provider/:providerId" element={<ProviderDetailsPage />} />
+          <Route path="/book/:providerId" element={<BookServicePage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />

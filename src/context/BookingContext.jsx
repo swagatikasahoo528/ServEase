@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 const BookingContext = createContext(null);
 
@@ -30,9 +31,21 @@ const nowDateLabel = () => {
 };
 
 export function BookingProvider({ children }) {
+  const { users } = useAuth();
+  const userIdsFingerprint = useMemo(() => users.map((u) => u.id).sort().join("|"), [users]);
+
   const [bookings, setBookings] = useState(() => readJsonArray(STORAGE_BOOKINGS));
   const [requests, setRequests] = useState(() => readJsonArray(STORAGE_REQUESTS));
   const [providerNotifications, setProviderNotifications] = useState(readProviderNotifications);
+
+  useEffect(() => {
+    const ids = new Set(users.map((u) => u.id));
+    setBookings((prev) => prev.filter((b) => !b.providerAccountId || ids.has(b.providerAccountId)));
+    setRequests((prev) => prev.filter((r) => !r.providerAccountId || ids.has(r.providerAccountId)));
+    setProviderNotifications((prev) =>
+      prev.filter((n) => !n.providerAccountId || ids.has(n.providerAccountId))
+    );
+  }, [userIdsFingerprint, users]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_BOOKINGS, JSON.stringify(bookings));

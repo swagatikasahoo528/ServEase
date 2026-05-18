@@ -1,7 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { providers as mockProviders, services as mockServices } from "../services/mockData";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  providers as mockProviders,
+  services as mockServices,
+} from "../services/mockData";
 import { useAuth } from "./AuthContext";
-import { makeUserProviderListingId, parseUserProviderListingId } from "../utils/providerIds";
+import {
+  makeUserProviderListingId,
+  parseUserProviderListingId,
+} from "../utils/providerIds";
 
 const STORAGE_PROVIDER_SERVICES = "servease_provider_services";
 
@@ -11,11 +24,13 @@ const PLACEHOLDER_IMAGE =
 const ServiceCatalogContext = createContext(null);
 
 function slugify(name) {
-  return String(name)
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "service";
+  return (
+    String(name)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "service"
+  );
 }
 
 function normalizeName(name) {
@@ -49,18 +64,14 @@ function writeAllProviderServiceMaps(map) {
 }
 
 function defaultServicesForUserId(userId) {
-  if (userId === "u2") {
-    return [
-      { id: 1, name: "Fan Installation", price: "₹300", catalogServiceId: resolveCatalogServiceId("Fan Installation") },
-      { id: 2, name: "Switchboard Repair", price: "₹450", catalogServiceId: resolveCatalogServiceId("Switchboard Repair") },
-    ];
-  }
+  // No default provider services included by default.
   return [];
 }
 
 function enrichOffering(item) {
   const name = String(item.name ?? "").trim();
-  const catalogServiceId = item.catalogServiceId || resolveCatalogServiceId(name);
+  const catalogServiceId =
+    item.catalogServiceId || resolveCatalogServiceId(name);
   return { ...item, name, catalogServiceId };
 }
 
@@ -75,8 +86,37 @@ function migrateMap(map) {
 export function ServiceCatalogProvider({ children }) {
   const { users } = useAuth();
   const [providerOfferingsMap, setProviderOfferingsMap] = useState(() =>
-    migrateMap(readAllProviderServiceMaps())
+    migrateMap(readAllProviderServiceMaps()),
   );
+
+  const userIdsFingerprint = useMemo(
+    () =>
+      users
+        .map((u) => u.id)
+        .sort()
+        .join("|"),
+    [users],
+  );
+
+  useEffect(() => {
+    setProviderOfferingsMap((prev) => {
+      const disk = migrateMap(readAllProviderServiceMaps());
+      const next = {};
+      users.forEach((u) => {
+        const id = u.id;
+        if (Object.prototype.hasOwnProperty.call(prev, id)) next[id] = prev[id];
+        else if (disk[id]) next[id] = disk[id];
+      });
+      const prevKeys = Object.keys(prev).sort().join("|");
+      const nextKeys = Object.keys(next).sort().join("|");
+      if (prevKeys === nextKeys) {
+        if (nextKeys === "") return prev;
+        const keys = Object.keys(next);
+        if (keys.every((k) => prev[k] === next[k])) return prev;
+      }
+      return next;
+    });
+  }, [userIdsFingerprint, users]);
 
   useEffect(() => {
     writeAllProviderServiceMaps(providerOfferingsMap);
@@ -88,9 +128,9 @@ export function ServiceCatalogProvider({ children }) {
         (u) =>
           u.role === "provider" &&
           u.approvalStatus === "approved" &&
-          (u.accountStatus ?? "active") === "active"
+          (u.accountStatus ?? "active") === "active",
       ),
-    [users]
+    [users],
   );
 
   const setOfferingsForUser = useCallback((userId, list) => {
@@ -109,7 +149,7 @@ export function ServiceCatalogProvider({ children }) {
       }
       return defaultServicesForUserId(userId);
     },
-    [providerOfferingsMap]
+    [providerOfferingsMap],
   );
 
   const mergedBrowseServices = useMemo(() => {
@@ -183,7 +223,7 @@ export function ServiceCatalogProvider({ children }) {
 
       return [...fromMock, ...dedupedUsers];
     },
-    [eligibleProviders, getOfferingsForUser]
+    [eligibleProviders, getOfferingsForUser],
   );
 
   const resolveProviderByListingId = useCallback(
@@ -193,7 +233,9 @@ export function ServiceCatalogProvider({ children }) {
         const u = users.find((x) => x.id === parsed.userId);
         if (!u || u.role !== "provider") return null;
         const offers = getOfferingsForUser(u.id);
-        const off = offers.find((o) => o.catalogServiceId === parsed.catalogServiceId);
+        const off = offers.find(
+          (o) => o.catalogServiceId === parsed.catalogServiceId,
+        );
         if (!off) return null;
         return {
           id: listingId,
@@ -209,7 +251,7 @@ export function ServiceCatalogProvider({ children }) {
       }
       return mockProviders.find((p) => p.id === listingId) ?? null;
     },
-    [users, getOfferingsForUser]
+    [users, getOfferingsForUser],
   );
 
   const value = useMemo(
@@ -220,14 +262,27 @@ export function ServiceCatalogProvider({ children }) {
       setOfferingsForUser,
       getOfferingsForUser,
     }),
-    [mergedBrowseServices, getProvidersForService, resolveProviderByListingId, setOfferingsForUser, getOfferingsForUser]
+    [
+      mergedBrowseServices,
+      getProvidersForService,
+      resolveProviderByListingId,
+      setOfferingsForUser,
+      getOfferingsForUser,
+    ],
   );
 
-  return <ServiceCatalogContext.Provider value={value}>{children}</ServiceCatalogContext.Provider>;
+  return (
+    <ServiceCatalogContext.Provider value={value}>
+      {children}
+    </ServiceCatalogContext.Provider>
+  );
 }
 
 export function useServiceCatalog() {
   const ctx = useContext(ServiceCatalogContext);
-  if (!ctx) throw new Error("useServiceCatalog must be used within ServiceCatalogProvider");
+  if (!ctx)
+    throw new Error(
+      "useServiceCatalog must be used within ServiceCatalogProvider",
+    );
   return ctx;
 }
